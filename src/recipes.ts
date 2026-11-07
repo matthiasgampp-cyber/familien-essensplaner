@@ -1184,3 +1184,15 @@ export const INITIAL_RECIPES: Recipe[] = [
     fromOriginalList: false
   }
 ];
+export interface DayPlan {
+  day: string;
+  meal: Recipe;
+}
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  category: string;
+}
