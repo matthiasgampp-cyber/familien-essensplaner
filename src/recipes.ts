@@ -28,8 +28,21 @@ export interface Recipe {
   fromOriginalList: boolean;
 }
 
+export interface DayPlan {
+  day: string;
+  meal: Recipe;
+}
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  category: string;
+}
+
 export const INITIAL_RECIPES: Recipe[] = [
-  // --- URSPRÜNGLICHE REZEPTE (1-29) ---
+  // --- REZEPTE 1 bis 29 ---
   {
     id: '1',
     name: 'Spätzle mit Rahmsoße',
@@ -706,8 +719,469 @@ export const INITIAL_RECIPES: Recipe[] = [
     instructions: 'Schnitzel panieren und braten, Pommes dazu machen.',
     fromOriginalList: false
   },
-
-  // --- NEUE AIRFRYER-REZEPTE (60-79) ---
+  // --- REZEPTE 30 bis 79 (Internet & Airfryer) ---
+  {
+    id: '30',
+    name: 'Hähnchenbrust in Kräuter-Frischkäse-Soße mit Reis',
+    category: 'Geflügel',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 490,
+    prepTime: 25,
+    kidsRating: 5,
+    mamaOption: 'Mit extra gedünsteter Zucchini',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Frischkäse wird erhitzt (erlaubt).',
+    ingredients: [
+      { name: 'Hähnchenbrust', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kräuterfrischkäse', amount: 200, unit: 'g', category: 'Kühlregal' },
+      { name: 'Basmati Reis', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Gemüsebrühe', amount: 250, unit: 'ml', category: 'Vorrat' }
+    ],
+    instructions: 'Hähnchenbrust in Stücke schneiden und anbraten. Mit Brühe ablöschen, Frischkäse einrühren bis eine cremige Soße entsteht. Mit Reis servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '31',
+    name: 'Rindergulasch mit Spätzle',
+    category: 'Klassiker / Rind',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Rind',
+    calories: 610,
+    prepTime: 60,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: 'Gekochte Soße (erlaubt).',
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Rindergulasch', amount: 600, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Zwiebeln', amount: 3, unit: 'Stk.', category: 'Gemüse' },
+      { name: 'Spätzle', amount: 500, unit: 'g', category: 'Kühlregal' },
+      { name: 'Rinderbrühe', amount: 400, unit: 'ml', category: 'Vorrat' }
+    ],
+    instructions: 'Gulasch und viel Zwiebeln scharf anbraten, mit Brühe aufgießen und mindestens 45 Minuten sanft schmoren lassen. Spätzle dazu kochen.',
+    fromOriginalList: false
+  },
+  {
+    id: '32',
+    name: 'Ofen-Lachs mit Karotten-Stampf',
+    category: 'Fisch',
+    isMeat: false,
+    isFish: true,
+    calories: 470,
+    prepTime: 30,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: 'Gegrillte Hähnchenbrust',
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Lachsfilet (für 3 Pers.)', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Hähnchenbrust (für 1 Pers. Ausweich)', amount: 150, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kartoffeln & Karotten', amount: 800, unit: 'g', category: 'Gemüse' },
+      { name: 'Butter & Milch', amount: 1, unit: 'Set', category: 'Kühlregal' }
+    ],
+    instructions: 'Kartoffeln und Karotten weich kochen und gemeinsam zu einem feinen Stampf verarbeiten. Lachs im Ofen backen (Ausweich-Hähnchen in der Pfanne braten).',
+    fromOriginalList: false
+  },
+  {
+    id: '33',
+    name: 'Schweinefilet medallions in Champignon-Rahm',
+    category: 'Schwein',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 530,
+    prepTime: 30,
+    kidsRating: 5,
+    mamaOption: 'Ohne Pilze für Kinder, extra für Mama',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Schweinefilet', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Champignons (oder anderes Gemüse)', amount: 300, unit: 'g', category: 'Gemüse' },
+      { name: 'Sahne', amount: 200, unit: 'ml', category: 'Kühlregal' },
+      { name: 'Spätzle oder Reis', amount: 300, unit: 'g', category: 'Vorrat' }
+    ],
+    instructions: 'Medallions kurz anbraten und warmhalten. In derselben Pfanne Gemüse anbraten, mit Sahne ablöschen, Fleisch zurückgeben und kurz ziehen lassen.',
+    fromOriginalList: false
+  },
+  {
+    id: '34',
+    name: 'Zucchini-Reis-Pfanne mit Hähnchen',
+    category: 'Geflügel',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 460,
+    prepTime: 25,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenbrust', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Zucchini', amount: 2, unit: 'Stk.', category: 'Gemüse' },
+      { name: 'Reis', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Brühe & Kräuter', amount: 1, unit: 'Set', category: 'Vorrat' }
+    ],
+    instructions: 'Reis kochen. Hähnchen in Streifen anbraten, gewürfelte Zucchini dazugeben, mit etwas Brühe ablöschen und mit dem Reis in der Pfanne vermengen.',
+    fromOriginalList: false
+  },
+  {
+    id: '35',
+    name: 'Grießbrei mit Apfelmus',
+    category: 'Süßes Gericht / Veggi',
+    isMeat: false,
+    isFish: false,
+    calories: 380,
+    prepTime: 15,
+    kidsRating: 5,
+    mamaOption: 'Mit Zimt und gerösteten Nüssen',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Milch', amount: 1, unit: 'l', category: 'Kühlregal' },
+      { name: 'Weichweizengrieß', amount: 120, unit: 'g', category: 'Vorrat' },
+      { name: 'Zucker & Zimt', amount: 1, unit: 'Set', category: 'Vorrat' },
+      { name: 'Apfelmus', amount: 1, unit: 'Glas', category: 'Vorrat' }
+    ],
+    instructions: 'Milch aufkochen, Grieß unter Rühren einrieseln lassen und bei schwacher Hitze kurz quellen lassen. Mit Zimt, Zucker und Apfelmus servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '36',
+    name: 'Pfannkuchen (süß oder herzhaft)',
+    category: 'Wochenende / Veggi',
+    isMeat: false,
+    isFish: false,
+    calories: 490,
+    prepTime: 25,
+    kidsRating: 5,
+    mamaOption: 'Herzhaft mit Kräuterfrischkäse',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Mit geschmolzenem Käse möglich.',
+    ingredients: [
+      { name: 'Mehl', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Milch', amount: 400, unit: 'ml', category: 'Kühlregal' },
+      { name: 'Eier', amount: 3, unit: 'Stk.', category: 'Kühlregal' },
+      { name: 'Butter zum Ausbacken', amount: 1, unit: 'Pck.', category: 'Kühlregal' }
+    ],
+    instructions: 'Teig aus Mehl, Milch und Eiern glatt rühren. Portionsweise in einer beschichteten Panne mit Butter goldbraune Pfannkuchen ausbacken.',
+    fromOriginalList: false
+  },
+  {
+    id: '37',
+    name: 'Käsespätzle mit Röstzwiebeln',
+    category: 'Schwäbisch / Veggi',
+    isMeat: false,
+    isFish: false,
+    calories: 560,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: 'Mit grünem Beilagensalat',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Käse im Ofen geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Spätzle', amount: 500, unit: 'g', category: 'Kühlregal' },
+      { name: 'Geriebener Käse (Gouda/Emmentaler)', amount: 250, unit: 'g', category: 'Kühlregal' },
+      { name: 'Zwiebeln', amount: 2, unit: 'Stk.', category: 'Gemüse' }
+    ],
+    instructions: 'Spätzle kochen. In einer Auflaufform abwechselnd mit reichlich geriebenem Käse schichten. Im Ofen überbacken, bis der Käse schmilzt. Röstzwiebeln darübergeben.',
+    fromOriginalList: false
+  },
+  {
+    id: '38',
+    name: 'Kartoffel-Möhren-Untereinander mit Frikadelle',
+    category: 'Klassiker / Schwein-Rind',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 520,
+    prepTime: 35,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Kartoffeln & Möhren', amount: 1000, unit: 'g', category: 'Gemüse' },
+      { name: 'Frikadellen (halb/halb)', amount: 4, unit: 'Stk.', category: 'Fleisch & Fisch' },
+      { name: 'Butter & Milch', amount: 1, unit: 'Set', category: 'Kühlregal' }
+    ],
+    instructions: 'Kartoffeln und Möhren gemeinsam weich kochen, abgießen und grob stampfen. Frikadellen in der Pfanne braten und zusammen servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '39',
+    name: 'Hähnchen-Nudel-Pfanne mit Erbsen',
+    category: 'Geflügel / Pasta',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 480,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenbrust', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kurze Nudeln (Penne/Fusilli)', amount: 400, unit: 'g', category: 'Vorrat' },
+      { name: 'Erbsen (TK)', amount: 250, unit: 'g', category: 'Gemüse' },
+      { name: 'Rahm / Sahne', amount: 100, unit: 'ml', category: 'Kühlregal' }
+    ],
+    instructions: 'Nudeln kochen. Hähnchen anbraten, Erbsen dazugeben, mit Sahne ablöschen und die Nudeln direkt unterheben.',
+    fromOriginalList: false
+  },
+  {
+    id: '40',
+    name: 'Seelachsfilet im Eimantel mit Kartoffelsalat',
+    category: 'Fisch',
+    isMeat: false,
+    isFish: true,
+    calories: 490,
+    prepTime: 30,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: 'Geflügel-Wiener oder Tofu',
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Seelachsfilet (für 3 Pers.)', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Geflügel-Wiener (für 1 Pers. Ausweich)', amount: 2, unit: 'Stk.', category: 'Fleisch & Fisch' },
+      { name: 'Kartoffelsalat (fertig oder frisch)', amount: 600, unit: 'g', category: 'Kühlregal' },
+      { name: 'Ei & Mehl zum Wenden', amount: 1, unit: 'Set', category: 'Vorrat' }
+    ],
+    instructions: 'Fischfilets in Mehl und verquirltem Ei wenden, in der Pfanne goldbraun ausbacken. Kartoffelsalat dazu reichen (für 1 Person stattdessen Würstchen erwärmen).',
+    fromOriginalList: false
+  },
+  {
+    id: '41',
+    name: 'Bunter Gemüsetopf mit Würstchen',
+    category: 'Suppe / Eintopf',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 420,
+    prepTime: 30,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Eintopf-Gemüse (Möhren, Kohlrabi, Kartoffeln)', amount: 800, unit: 'g', category: 'Gemüse' },
+      { name: 'Geflügel- oder Schweinswürstchen', amount: 4, unit: 'Stk.', category: 'Fleisch & Fisch' },
+      { name: 'Gemüsebrühe', amount: 1, unit: 'l', category: 'Vorrat' }
+    ],
+    instructions: 'Gemüse klein schneiden, in Brühe weich kochen. Würstchen in Scheiben geschnitten in der Suppe heiß werden lassen.',
+    fromOriginalList: false
+  },
+  {
+    id: '42',
+    name: 'Bolognese-Auflauf mit Penne',
+    category: 'Pasta / Ofen',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Rind',
+    calories: 590,
+    prepTime: 35,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: 'Eingekochte Bolognese-Sauce (erlaubt).',
+    cheeseNote: 'Käse im Ofen geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Penne Nudeln', amount: 400, unit: 'g', category: 'Vorrat' },
+      { name: 'Rinderhackfleisch', amount: 400, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Passierte Tomaten', amount: 2, unit: 'Dosen', category: 'Vorrat' },
+      { name: 'Reibekäse', amount: 150, unit: 'g', category: 'Kühlregal' }
+    ],
+    instructions: 'Penne bissfest kochen. Hackfleisch mit Tomatensoße anbraten. Nudeln und Soße in einer Form mischen, mit Käse bestreuen und im Ofen überbacken.',
+    fromOriginalList: false
+  },
+  {
+    id: '43',
+    name: 'Hähnchen-Gyros mit Reis & Tsatsiki',
+    category: 'Geflügel / Griechisch',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 510,
+    prepTime: 30,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: true,
+    tomatoNote: 'Tsatsiki ohne rohe Tomatenstücke zubereiten.',
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenbrust (Gyros-Art)', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Basmati Reis', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Griechischer Joghurt & Gurke (für Tsatsiki)', amount: 1, unit: 'Set', category: 'Kühlregal' }
+    ],
+    instructions: 'Hähnchenfleisch scharf in der Pfanne anbraten. Reis kochen. Aus Joghurt, geraspelter Gurke und Knoblauch ein Tsatsiki anrühren.',
+    fromOriginalList: false
+  },
+  {
+    id: '44',
+    name: 'Blumenkohl-Käse-Medallions mit Kartoffeln',
+    category: 'Veggi / Ofen',
+    isMeat: false,
+    isFish: false,
+    calories: 410,
+    prepTime: 25,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Käse in Medallions geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Blumenkohl-Medallions (TK oder Frisch)', amount: 8, unit: 'Stk.', category: 'Kühlregal' },
+      { name: 'Kartoffeln', amount: 800, unit: 'g', category: 'Gemüse' },
+      { name: 'Leichte Kräutersoße', amount: 1, unit: 'Pck.', category: 'Vorrat' }
+    ],
+    instructions: 'Kartoffeln als Salzkartoffeln kochen. Blumenkohl-Medallions im Ofen oder der Pfanne goldbraun backen. Dazu Kräutersoße reichen.',
+    fromOriginalList: false
+  },
+  {
+    id: '45',
+    name: 'Rinder-Frikadellen mit Ofenkartoffeln',
+    category: 'Klassiker / Rind',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Rind',
+    calories: 550,
+    prepTime: 40,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Rinderhackfleisch', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Festkochende Kartoffeln', amount: 800, unit: 'g', category: 'Gemüse' },
+      { name: 'Gewürze & Ei', amount: 1, unit: 'Set', category: 'Vorrat' }
+    ],
+    instructions: 'Kartoffeln in Spalten schneiden, mit Öl und Salz auf ein Backblech geben und im Ofen backen. Aus Hackfleisch Frikadellen formen und in der Pfanne braten.',
+    fromOriginalList: false
+  },
+  {
+    id: '46',
+    name: 'Tomatensoßen-Nudeln mit Schinkenwürfeln',
+    category: 'Pasta / Schwein',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 530,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: 'Verarbeitete Tomatensoße aus Glas/Dose.',
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Spaghetti oder Penne', amount: 400, unit: 'g', category: 'Vorrat' },
+      { name: 'Schinkenwürfel (mager)', amount: 150, unit: 'g', category: 'Kühlregal' },
+      { name: 'Fruchtige Tomatensoße', amount: 500, unit: 'ml', category: 'Vorrat' }
+    ],
+    instructions: 'Nudeln kochen. Schinkenwürfel anbraten, Tomatensoße dazugeben und kurz erwärmen. Alles zusammen servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '47',
+    name: 'Gebackener Ofenkäse mit Baguette',
+    category: 'Veggi / Käse',
+    isMeat: false,
+    isFish: false,
+    calories: 580,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: 'Mit Ofengemüse als Beilage',
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Käse im Ofen komplett geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Camembert / Ofenkäse', amount: 2, unit: 'Stk.', category: 'Kühlregal' },
+      { name: 'Baguette / Ciabatta', amount: 2, unit: 'Stk.', category: 'Kühlregal' },
+      { name: 'Preiselbeeren', amount: 1, unit: 'Glas', category: 'Vorrat' }
+    ],
+    instructions: 'Ofenkäse nach Packungsanleitung im Ofen flüssig backen. Baguette aufbacken und in Stücke schneiden zum Dippen.',
+    fromOriginalList: false
+  },
+  {
+    id: '48',
+    name: 'Asiatische Gemüsenudel-Pfanne',
+    category: 'Asia / Veggi',
+    isMeat: false,
+    isFish: false,
+    calories: 430,
+    prepTime: 20,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Indomie / Wok-Nudeln', amount: 4, unit: 'Pck.', category: 'Vorrat' },
+      { name: 'Wok-Gemüse (Möhren, Brokkoli, Paprika)', amount: 400, unit: 'g', category: 'Gemüse' },
+      { name: 'Sojasoße & Sesamöl', amount: 1, unit: 'Set', category: 'Vorrat' }
+    ],
+    instructions: 'Gemüse in der Pfanne anbraten. Nudeln kochen, dazugeben und mit Sojasoße und Sesamöl kräftig durchschwenken.',
+    fromOriginalList: false
+  },
+  {
+    id: '49',
+    name: 'Schinkennudeln aus der Pfanne',
+    category: 'Klassiker / Schwein',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 540,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Nudeln (vom Vortag oder frisch)', amount: 400, unit: 'g', category: 'Vorrat' },
+      { name: 'Schinkennicker / Kochschinken', amount: 250, unit: 'g', category: 'Kühlregal' },
+      { name: 'Eier', amount: 3, unit: 'Stk.', category: 'Kühlregal' }
+    ],
+    instructions: 'Schinken anbraten, gekochte Nudeln dazugeben und goldbraun anbraten. Verquirlte Eier darübergeben und stocken lassen.',
+    fromOriginalList: false
+  },
   {
     id: '60',
     name: 'Airfryer Hähnchenschenkel mit Ofengemüse',
@@ -1182,17 +1656,243 @@ export const INITIAL_RECIPES: Recipe[] = [
     instructions: 'Äpfel entkernen, mit Nüssen, Marzipan und etwas Butter füllen. Im Airfryer bei 180°C in 15–18 Minuten weich backen.',
     isAirfryer: true,
     fromOriginalList: false
+  },
+  {
+    id: '80',
+    name: 'Airfryer Hähnchenbrust im Speckmantel',
+    category: 'Airfryer / Geflügel',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 490,
+    prepTime: 22,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenbrustfilet', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Frühstücksspeck (Schwein)', amount: 150, unit: 'g', category: 'Kühlregal' },
+      { name: 'Bunter Salat & Gurke', amount: 1, unit: 'Set', category: 'Gemüse' }
+    ],
+    instructions: 'Hähnchenbrust in portionengerechte Stücke schneiden, mit Speckstreifen umwickeln. Im Airfryer bei 190°C in ca. 18 Minuten knusprig garen. Dazu frischen Salat reichen.',
+    isAirfryer: true,
+    fromOriginalList: false
+  },
+  {
+    id: '81',
+    name: 'Airfryer Lachs-Würfel mit Reis',
+    category: 'Airfryer / Fisch',
+    isMeat: false,
+    isFish: true,
+    calories: 460,
+    prepTime: 20,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: 'Hähnchenwürfel',
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Lachsfilet (für 3 Pers.)', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Hähnchenbrust (für 1 Pers. Ausweich)', amount: 150, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Basmati Reis', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Zucchini', amount: 2, unit: 'Stk.', category: 'Gemüse' }
+    ],
+    instructions: 'Lachs in Würfel schneiden, mit etwas Öl und Kräutern marinieren. Im Airfryer bei 180°C ca. 10 Minuten garen. Mit Reis und Zucchini servieren.',
+    isAirfryer: true,
+    fromOriginalList: false
+  },
+  {
+    id: '82',
+    name: 'Schweinefilet im Ofen mit Kräuterbutter',
+    category: 'Schwein / Ofen',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 510,
+    prepTime: 35,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Schweinefilet', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kartoffeln für Ofenkartoffeln', amount: 800, unit: 'g', category: 'Gemüse' },
+      { name: 'Kräuterbutter', amount: 1, unit: 'Pck.', category: 'Kühlregal' }
+    ],
+    instructions: 'Kartoffeln als Spalten im Ofen backen. Schweinefilet anbraten und im Ofen garziehen lassen. Mit Kräuterbutter servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '83',
+    name: 'Airfryer Ofen-Pfannkuchen (Apfel)',
+    category: 'Airfryer / Süß & Veggi',
+    isMeat: false,
+    isFish: false,
+    calories: 410,
+    prepTime: 20,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Mehl & Milch & Eier (Pfannkuchenteig)', amount: 1, unit: 'Set', category: 'Vorrat' },
+      { name: 'Äpfel', amount: 2, unit: 'Stk.', category: 'Gemüse' },
+      { name: 'Zimt & Zucker', amount: 1, unit: 'Set', category: 'Vorrat' }
+    ],
+    instructions: 'Teig anrühren, in eine backfeste Airfryer-Form gießen, mit Apfelscheiben belegen und bei 170°C ca. 18 Minuten backen.',
+    isAirfryer: true,
+    fromOriginalList: false
+  },
+  {
+    id: '84',
+    name: 'Rinder-Gulaschsuppe mit Brot',
+    category: 'Suppe / Rind',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Rind',
+    calories: 480,
+    prepTime: 45,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: 'Verarbeitete Tomaten/Paprikapulver.',
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Rindergulasch (klein geschnitten)', amount: 400, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kartoffeln & Paprika', amount: 600, unit: 'g', category: 'Gemüse' },
+      { name: 'Rinderbrühe', amount: 1, unit: 'l', category: 'Vorrat' },
+      { name: 'Baguette', amount: 1, unit: 'Stk.', category: 'Kühlregal' }
+    ],
+    instructions: 'Rindfleisch und Gemüse anbraten, mit Brühe ablöschen und weich köcheln lassen, bis eine kräftige Suppe entsteht.',
+    fromOriginalList: false
+  },
+  {
+    id: '85',
+    name: 'Airfryer Hähnchenkeulen "Crispy Style"',
+    category: 'Airfryer / Geflügel',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 530,
+    prepTime: 30,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenunterkeulen', amount: 8, unit: 'Stk.', category: 'Fleisch & Fisch' },
+      { name: 'Paprikapulver & Öl', amount: 1, unit: 'Set', category: 'Vorrat' },
+      { name: 'Erbsen (TK)', amount: 350, unit: 'g', category: 'Gemüse' }
+    ],
+    instructions: 'Keulen würzen und im Airfryer bei 190°C ca. 25–28 Minuten rundherum knusprig garen. Dazu warme Erbsen servieren.',
+    isAirfryer: true,
+    fromOriginalList: false
+  },
+  {
+    id: '86',
+    name: 'Nudelauflauf mit Schinken & Erbsen',
+    category: 'Pasta / Ofen',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 560,
+    prepTime: 35,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Käse im Ofen geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Penne Nudeln', amount: 400, unit: 'g', category: 'Vorrat' },
+      { name: 'Kochschinken', amount: 200, unit: 'g', category: 'Kühlregal' },
+      { name: 'Erbsen (TK)', amount: 200, unit: 'g', category: 'Gemüse' },
+      { name: 'Sahne & Reibekäse', amount: 1, unit: 'Set', category: 'Kühlregal' }
+    ],
+    instructions: 'Nudeln kochen, mit Schinken, Erbsen und Sahne in eine Form geben. Mit Käse bestreuen und im Ofen überbacken.',
+    fromOriginalList: false
+  },
+  {
+    id: '87',
+    name: 'Airfryer Mini-Calzone (gefüllte Teigtaschen)',
+    category: 'Airfryer / Schnell',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Schwein',
+    calories: 520,
+    prepTime: 25,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: true,
+    tomatoNote: 'Verarbeitete Pizzasauce verwenden. Keine frischen Tomaten.',
+    cheeseNote: 'Käse im Airfryer geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Pizzateig (Kühlregal)', amount: 2, unit: 'Pck.', category: 'Kühlregal' },
+      { name: 'Schinken & geriebener Käse', amount: 200, unit: 'g', category: 'Kühlregal' },
+      { name: 'Pizzasauce (verarbeitet)', amount: 150, unit: 'ml', category: 'Vorrat' }
+    ],
+    instructions: 'Teigkreise ausrollen, mit Sauce, Schinken und Käse füllen, zu Halbmonden zusammenklappen und Ränder festdrücken. Im Airfryer bei 180°C 12 Minuten backen.',
+    isAirfryer: true,
+    fromOriginalList: false
+  },
+  {
+    id: '88',
+    name: 'Puten- or Hähnchen-Geschnetzeltes mit Reis',
+    category: 'Geflügel',
+    isMeat: true,
+    isFish: false,
+    meatType: 'Hähnchen',
+    calories: 470,
+    prepTime: 25,
+    kidsRating: 5,
+    mamaOption: null,
+    fishAlternative: null,
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: null,
+    ingredients: [
+      { name: 'Hähnchenbrust in Streifen', amount: 500, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Basmati Reis', amount: 300, unit: 'g', category: 'Vorrat' },
+      { name: 'Champignons oder Zucchini', amount: 250, unit: 'g', category: 'Gemüse' },
+      { name: 'Sahne', amount: 150, unit: 'ml', category: 'Kühlregal' }
+    ],
+    instructions: 'Fleisch und Gemüse anbraten, mit Sahne ablöschen und kurz einkochen lassen. Mit Reis servieren.',
+    fromOriginalList: false
+  },
+  {
+    id: '89',
+    name: 'Airfryer Schlemmer-Fischfilet',
+    category: 'Airfryer / Fisch',
+    isMeat: false,
+    isFish: true,
+    calories: 450,
+    prepTime: 22,
+    kidsRating: 4,
+    mamaOption: null,
+    fishAlternative: 'Gegrillte Hähnchenbrust',
+    freshTomatoWarning: false,
+    tomatoNote: null,
+    cheeseNote: 'Käsekruste im Airfryer geschmolzen (erlaubt).',
+    ingredients: [
+      { name: 'Fischfilet (für 3 Pers.)', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Hähnchenbrust (für 1 Pers. Ausweich)', amount: 150, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Kräuterfrischkäse & Reibekäse (für Kruste)', amount: 1, unit: 'Set', category: 'Kühlregal' },
+      { name: 'Salzkartoffeln', amount: 800, unit: 'g', category: 'Gemüse' }
+    ],
+    instructions: 'Kartoffeln kochen. Fisch mit Frischkäse und Käse bestreichen, im Airfryer bei 180°C ca. 15 Minuten überbacken.',
+    isAirfryer: true,
+    fromOriginalList: false
   }
 ];
-export interface DayPlan {
-  day: string;
-  meal: Recipe;
-}
-
-export interface ShoppingItem {
-  id: string;
-  name: string;
-  amount: number;
-  unit: string;
-  category: string;
-}
