@@ -14,7 +14,8 @@ import {
   Check, 
   Utensils, 
   ChefHat,
-  Filter
+  Filter,
+  X
 } from 'lucide-react';
 
 export interface Ingredient {
@@ -30,6 +31,7 @@ export interface Recipe {
   category: string;
   isMeat: boolean;
   isFish: boolean;
+  meatType?: 'Hähnchen' | 'Rind' | 'Schwein' | 'Andere';
   calories: number;
   prepTime: number;
   kidsRating: number;
@@ -106,6 +108,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Klassiker',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 580,
     prepTime: 35,
     kidsRating: 5,
@@ -128,6 +131,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 550,
     prepTime: 30,
     kidsRating: 5,
@@ -173,6 +177,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Gemüse & Fleisch',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 490,
     prepTime: 40,
     kidsRating: 4,
@@ -183,7 +188,7 @@ const INITIAL_RECIPES: Recipe[] = [
     cheeseNote: null,
     ingredients: [
       { name: 'Große Paprika', amount: 4, unit: 'Stk.', category: 'Gemüse' },
-      { name: 'Hackfleisch gemischt (mager)', amount: 350, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Hackfleisch Rind/Schwein', amount: 350, unit: 'g', category: 'Fleisch & Fisch' },
       { name: 'Reis', amount: 250, unit: 'g', category: 'Vorrat' },
       { name: 'Tomatensoße (gekocht)', amount: 400, unit: 'ml', category: 'Vorrat' }
     ],
@@ -214,9 +219,10 @@ const INITIAL_RECIPES: Recipe[] = [
   {
     id: '8',
     name: 'Maultaschen mit Salat',
-    category: 'Veggi / Schwäbisch',
-    isMeat: false,
+    category: 'Schwäbisch / Schwein',
+    isMeat: true,
     isFish: false,
+    meatType: 'Schwein',
     calories: 510,
     prepTime: 20,
     kidsRating: 5,
@@ -226,7 +232,7 @@ const INITIAL_RECIPES: Recipe[] = [
     tomatoNote: 'Salat ohne frische Tomaten zubereiten (z.B. Gurken-Kräuter-Salat).',
     cheeseNote: null,
     ingredients: [
-      { name: 'Maultaschen (Gemüse oder Fleisch)', amount: 2, unit: 'Pck.', category: 'Kühlregal' },
+      { name: 'Maultaschen (Schwein/Gemüse)', amount: 2, unit: 'Pck.', category: 'Kühlregal' },
       { name: 'Paprika', amount: 2, unit: 'Stk.', category: 'Gemüse' },
       { name: 'Gemischter Salat & Gurke', amount: 1, unit: 'Set', category: 'Gemüse' }
     ],
@@ -260,6 +266,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Pasta',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 560,
     prepTime: 25,
     kidsRating: 5,
@@ -282,6 +289,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 520,
     prepTime: 30,
     kidsRating: 4,
@@ -308,13 +316,13 @@ const INITIAL_RECIPES: Recipe[] = [
     prepTime: 25,
     kidsRating: 4,
     mamaOption: null,
-    fishAlternative: 'Gegrillte Putenbruststreifen',
+    fishAlternative: 'Gegrillte Hähnchenbruststreifen',
     freshTomatoWarning: false,
     tomatoNote: null,
     cheeseNote: null,
     ingredients: [
       { name: 'Lachs / Schollenfilet (für 3 Pers.)', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
-      { name: 'Putenbrust (für 1 Pers. Ausweich)', amount: 150, unit: 'g', category: 'Fleisch & Fisch' },
+      { name: 'Hähnchenbrust (für 1 Pers. Ausweich)', amount: 150, unit: 'g', category: 'Fleisch & Fisch' },
       { name: 'Möhren & Erbsen (TK/Frisch)', amount: 500, unit: 'g', category: 'Gemüse' },
       { name: 'Festkochende Kartoffeln', amount: 800, unit: 'g', category: 'Gemüse' }
     ],
@@ -326,6 +334,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Suppe / Geflügel',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 420,
     prepTime: 45,
     kidsRating: 4,
@@ -347,6 +356,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Wochenende',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 640,
     prepTime: 35,
     kidsRating: 5,
@@ -412,6 +422,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Pasta / Ofen',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 590,
     prepTime: 50,
     kidsRating: 5,
@@ -434,6 +445,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 490,
     prepTime: 25,
     kidsRating: 4,
@@ -459,7 +471,7 @@ const INITIAL_RECIPES: Recipe[] = [
     prepTime: 30,
     kidsRating: 4,
     mamaOption: null,
-    fishAlternative: 'Überbackener Halloumi (gebraten/gebacken) oder Puten-Schnitzel',
+    fishAlternative: 'Überbackener Halloumi oder Hähnchen-Schnitzel',
     freshTomatoWarning: false,
     tomatoNote: null,
     cheeseNote: 'Halloumi wird kross gebraten (erlaubt).',
@@ -477,6 +489,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel / Reispfanne',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 510,
     prepTime: 35,
     kidsRating: 4,
@@ -541,6 +554,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Pasta / Fleisch',
     isMeat: true,
     isFish: false,
+    meatType: 'Rind',
     calories: 570,
     prepTime: 30,
     kidsRating: 5,
@@ -562,6 +576,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 480,
     prepTime: 25,
     kidsRating: 4,
@@ -606,6 +621,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Geflügel / Klassiker',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 590,
     prepTime: 40,
     kidsRating: 5,
@@ -627,6 +643,7 @@ const INITIAL_RECIPES: Recipe[] = [
     category: 'Mexikanisch',
     isMeat: true,
     isFish: false,
+    meatType: 'Hähnchen',
     calories: 510,
     prepTime: 20,
     kidsRating: 5,
@@ -667,11 +684,12 @@ const INITIAL_RECIPES: Recipe[] = [
   },
   {
     id: '29',
-    name: 'Puten-Geschnetzeltes mit Rösti',
-    category: 'Geflügel',
+    name: 'Schweine-Schnitzel mit Pommes & Erbsen',
+    category: 'Klassiker / Schwein',
     isMeat: true,
     isFish: false,
-    calories: 520,
+    meatType: 'Schwein',
+    calories: 540,
     prepTime: 30,
     kidsRating: 5,
     mamaOption: null,
@@ -680,10 +698,10 @@ const INITIAL_RECIPES: Recipe[] = [
     tomatoNote: null,
     cheeseNote: null,
     ingredients: [
-      { name: 'Putenbruststreifen', amount: 450, unit: 'g', category: 'Fleisch & Fisch' },
-      { name: 'Champignons', amount: 250, unit: 'g', category: 'Gemüse' },
-      { name: 'Kartoffel-Rösti (TK/Frisch)', amount: 600, unit: 'g', category: 'Kühlregal' },
-      { name: 'Rahmsoße', amount: 1, unit: 'Pck.', category: 'Vorrat' }
+      { name: 'Schweineschnitzel (mager)', amount: 4, unit: 'Stk.', category: 'Fleisch & Fisch' },
+      { name: 'Paniermehl & Ei', amount: 1, unit: 'Set', category: 'Vorrat' },
+      { name: 'Backofen-Pommes', amount: 600, unit: 'g', category: 'Kühlregal' },
+      { name: 'Erbsen (TK)', amount: 300, unit: 'g', category: 'Gemüse' }
     ],
     fromOriginalList: false
   }
@@ -697,16 +715,47 @@ export default function App() {
   const [favorites, setFavorites] = useState<string[]>(['3', '7', '14', '15', '26']);
   const [historyIds] = useState<string[]>(['2', '4', '8', '11', '13', '18', '20']);
   
-  // FIX: Explicitly typed state to prevent TypeScript build errors
+  // Excluded ingredients state
+  const [excludedIngredients, setExcludedIngredients] = useState<string[]>([]);
+  const [newIngredientInput, setNewIngredientInput] = useState<string>('');
+
   const [currentWeekPlan, setCurrentWeekPlan] = useState<DayPlan[]>([]);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
 
+  const addExcludedIngredient = () => {
+    const trimmed = newIngredientInput.trim().toLowerCase();
+    if (trimmed && !excludedIngredients.includes(trimmed)) {
+      setExcludedIngredients(prev => [...prev, trimmed]);
+      setNewIngredientInput('');
+    }
+  };
+
+  const removeExcludedIngredient = (item: string) => {
+    setExcludedIngredients(prev => prev.filter(i => i !== item));
+  };
+
+  // Check if recipe contains any excluded ingredient or unallowed meat type
+  const isRecipeAllowed = (recipe: Recipe): boolean => {
+    // 1. Meat restriction check (Only Hähnchen, Rind, Schwein allowed)
+    if (recipe.isMeat && recipe.meatType && !['Hähnchen', 'Rind', 'Schwein'].includes(recipe.meatType)) {
+      return false;
+    }
+
+    // 2. Excluded ingredients check
+    if (excludedIngredients.length === 0) return true;
+
+    return !recipe.ingredients.some(ing => 
+      excludedIngredients.some(ex => ing.name.toLowerCase().includes(ex))
+    );
+  };
+
   const getEligibleRecipes = (excludeIds: string[] = [], meatCountCurrent: number = 0, maxMeat: number = 4): Recipe[] => {
     const allBlockedIds = new Set([...historyIds, ...excludeIds]);
-    let eligible = recipes.filter(r => !allBlockedIds.has(r.id));
+    
+    let eligible = recipes.filter(r => !allBlockedIds.has(r.id) && isRecipeAllowed(r));
     
     if (eligible.length < 3) {
-      eligible = recipes.filter(r => !excludeIds.includes(r.id));
+      eligible = recipes.filter(r => !excludeIds.includes(r.id) && isRecipeAllowed(r));
     }
 
     if (meatCountCurrent >= maxMeat) {
@@ -740,7 +789,8 @@ export default function App() {
         }
       });
 
-      const selected = weightedPool[Math.floor(Math.random() * weightedPool.length)] || recipes[0];
+      const fallback = recipes.find(r => isRecipeAllowed(r)) || recipes[0];
+      const selected = weightedPool[Math.floor(Math.random() * weightedPool.length)] || fallback;
       
       if (selected.isMeat) {
         meatCount++;
@@ -774,7 +824,8 @@ export default function App() {
       if (favorites.includes(r.id)) weightedPool.push(r);
     });
 
-    const newMeal = weightedPool[Math.floor(Math.random() * weightedPool.length)] || recipes[0];
+    const fallback = recipes.find(r => isRecipeAllowed(r)) || recipes[0];
+    const newMeal = weightedPool[Math.floor(Math.random() * weightedPool.length)] || fallback;
 
     const updatedPlan = [...currentWeekPlan];
     updatedPlan[dayIndex] = {
@@ -787,7 +838,7 @@ export default function App() {
 
   useEffect(() => {
     generateWeeklyPlan();
-  }, []);
+  }, [excludedIngredients]);
 
   const toggleFavorite = (id: string) => {
     setFavorites(prev => 
@@ -933,23 +984,65 @@ export default function App() {
               </div>
             </div>
 
-            <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 rounded-xl p-3.5 text-xs text-slate-700 flex flex-wrap gap-x-6 gap-y-2 items-center">
-              <span className="font-semibold text-slate-900 flex items-center gap-1">
-                <Filter className="w-3.5 h-3.5 text-amber-600" />
-                Aktive Regeln & Filtereinstellungen:
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                Tomatensoße OK / Frische Tomaten verboten
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                Überbackener Käse OK / Roher Käse gemieden
-              </span>
-              <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
-                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                14 Tage Wiederholungssperre
-              </span>
+            {/* RESTRICTION HIGHLIGHT & INGREDIENT EXCLUSION BOX */}
+            <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3">
+              <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 rounded-xl p-3.5 text-xs text-slate-700 flex flex-wrap gap-x-6 gap-y-2 items-center">
+                <span className="font-semibold text-slate-900 flex items-center gap-1">
+                  <Filter className="w-3.5 h-3.5 text-amber-600" />
+                  Aktive Regeln:
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Fleisch nur Hähnchen, Rind & Schwein
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Tomatensoße OK / Frische Tomaten verboten
+                </span>
+                <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
+                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                  Überbackener Käse OK / Roher Käse gemieden
+                </span>
+              </div>
+
+              {/* DYNAMIC EXCLUSION FIELD */}
+              <div className="pt-2">
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  🚫 Zutaten grundsätzlich ausschließen (z.B. Pilze, Erbsen, Knoblauch):
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={newIngredientInput}
+                    onChange={(e) => setNewIngredientInput(e.target.value)}
+                    onKeyDown={(e) => e.key === 'Enter' && addExcludedIngredient()}
+                    placeholder="Zutat eingeben und Hinzufügen drücken..."
+                    className="flex-1 px-3 py-1.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  />
+                  <button
+                    onClick={addExcludedIngredient}
+                    className="bg-slate-800 hover:bg-slate-700 text-white px-3 py-1.5 rounded-xl text-xs font-semibold transition"
+                  >
+                    Ausschließen
+                  </button>
+                </div>
+
+                {excludedIngredients.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2.5">
+                    {excludedIngredients.map((item) => (
+                      <span 
+                        key={item}
+                        className="bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium"
+                      >
+                        {item}
+                        <button onClick={() => removeExcludedIngredient(item)} className="hover:text-rose-900">
+                          <X className="w-3 h-3" />
+                        </button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
@@ -967,7 +1060,7 @@ export default function App() {
                         <div className="flex items-center space-x-1">
                           {dayPlan.meal?.isMeat && (
                             <span className="bg-rose-100 text-rose-800 text-[11px] font-semibold px-2 py-0.5 rounded-full">
-                              Fleisch
+                              Fleisch ({dayPlan.meal.meatType})
                             </span>
                           )}
                           {dayPlan.meal?.isFish && (
@@ -1180,7 +1273,7 @@ export default function App() {
                       </div>
 
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {recipe.isMeat && <span className="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fleisch</span>}
+                        {recipe.isMeat && <span className="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fleisch ({recipe.meatType})</span>}
                         {recipe.isFish && <span className="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fisch</span>}
                         {!recipe.isMeat && !recipe.isFish && <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Veggie</span>}
                         {recipe.fromOriginalList && <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Aus Vorlage</span>}
