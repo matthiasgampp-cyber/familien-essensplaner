@@ -15,7 +15,11 @@ import {
   Utensils, 
   ChefHat,
   Filter,
-  X
+  X,
+  Edit3,
+  Plus,
+  Trash2,
+  Save
 } from 'lucide-react';
 
 export interface Ingredient {
@@ -711,7 +715,13 @@ const DAYS_OF_WEEK = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('plan');
-  const [recipes] = useState<Recipe[]>(INITIAL_RECIPES);
+  
+  // Persistent recipes in localStorage
+  const [recipes, setRecipes] = useState<Recipe[]>(() => {
+    const saved = localStorage.getItem('familien_recipes_v2');
+    return saved ? JSON.parse(saved) : INITIAL_RECIPES;
+  });
+
   const [favorites, setFavorites] = useState<string[]>(['3', '7', '14', '15', '26']);
   const [historyIds] = useState<string[]>(['2', '4', '8', '11', '13', '18', '20']);
   
@@ -721,6 +731,13 @@ export default function App() {
 
   const [currentWeekPlan, setCurrentWeekPlan] = useState<DayPlan[]>([]);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
+
+  // Editing state for recipe modal
+  const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+
+  useEffect(() => {
+    localStorage.setItem('familien_recipes_v2', JSON.stringify(recipes));
+  }, [recipes]);
 
   const addExcludedIngredient = () => {
     const trimmed = newIngredientInput.trim().toLowerCase();
@@ -734,14 +751,11 @@ export default function App() {
     setExcludedIngredients(prev => prev.filter(i => i !== item));
   };
 
-  // Check if recipe contains any excluded ingredient or unallowed meat type
   const isRecipeAllowed = (recipe: Recipe): boolean => {
-    // 1. Meat restriction check (Only Hähnchen, Rind, Schwein allowed)
     if (recipe.isMeat && recipe.meatType && !['Hähnchen', 'Rind', 'Schwein'].includes(recipe.meatType)) {
       return false;
     }
 
-    // 2. Excluded ingredients check
     if (excludedIngredients.length === 0) return true;
 
     return !recipe.ingredients.some(ing => 
@@ -895,6 +909,39 @@ export default function App() {
     }));
   };
 
+  // Recipe edit handlers
+  const saveRecipeChanges = (updatedRecipe: Recipe) => {
+    setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r));
+    setCurrentWeekPlan(prev => prev.map(dp => dp.meal.id === updatedRecipe.id ? { ...dp, meal: updatedRecipe } : dp));
+    setEditingRecipe(null);
+  };
+
+  const updateEditingIngredient = (index: number, field: keyof Ingredient, value: any) => {
+    if (!editingRecipe) return;
+    const newIngredients = [...editingRecipe.ingredients];
+    newIngredients[index] = { ...newIngredients[index], [field]: value };
+    setEditingRecipe({ ...editingRecipe, ingredients: newIngredients });
+  };
+
+  const addIngredientToEditing = () => {
+    if (!editingRecipe) return;
+    setEditingRecipe({
+      ...editingRecipe,
+      ingredients: [
+        ...editingRecipe.ingredients,
+        { name: 'Neue Zutat', amount: 100, unit: 'g', category: 'Vorrat' }
+      ]
+    });
+  };
+
+  const removeIngredientFromEditing = (index: number) => {
+    if (!editingRecipe) return;
+    setEditingRecipe({
+      ...editingRecipe,
+      ingredients: editingRecipe.ingredients.filter((_, i) => i !== index)
+    });
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-12">
       <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-lg sticky top-0 z-30">
@@ -984,7 +1031,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* RESTRICTION HIGHLIGHT & INGREDIENT EXCLUSION BOX */}
             <div className="bg-white rounded-2xl p-4 border border-slate-200/80 shadow-sm space-y-3">
               <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 rounded-xl p-3.5 text-xs text-slate-700 flex flex-wrap gap-x-6 gap-y-2 items-center">
                 <span className="font-semibold text-slate-900 flex items-center gap-1">
@@ -1005,7 +1051,6 @@ export default function App() {
                 </span>
               </div>
 
-              {/* DYNAMIC EXCLUSION FIELD */}
               <div className="pt-2">
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   🚫 Zutaten grundsätzlich ausschließen (z.B. Pilze, Erbsen, Knoblauch):
@@ -1016,7 +1061,7 @@ export default function App() {
                     value={newIngredientInput}
                     onChange={(e) => setNewIngredientInput(e.target.value)}
                     onKeyDown={(e) => e.key === 'Enter' && addExcludedIngredient()}
-                    placeholder="Zutat eingeben und Hinzufügen drücken..."
+                    placeholder="Zutat eingeben..."
                     className="flex-1 px-3 py-1.5 border border-slate-300 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-teal-500"
                   />
                   <button
@@ -1084,7 +1129,6 @@ export default function App() {
                           <button
                             onClick={() => toggleFavorite(dayPlan.meal.id)}
                             className="p-1 text-slate-400 hover:text-rose-500 transition shrink-0"
-                            title="Zu Favoriten hinzufügen"
                           >
                             <Heart className={`w-5 h-5 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
                           </button>
@@ -1100,61 +1144,26 @@ export default function App() {
                             {dayPlan.meal?.calories} kcal
                           </span>
                           <span className="text-amber-500 font-medium">
-                            ★ {dayPlan.meal?.kidsRating}/5 (Kinder)
+                            ★ {dayPlan.meal?.kidsRating}/5
                           </span>
-                        </div>
-
-                        <div className="space-y-2 pt-1">
-                          {dayPlan.meal?.mamaOption && (
-                            <div className="bg-emerald-50 border border-emerald-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
-                              <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-emerald-900 block">Mama-Spezial:</span>
-                                <span className="text-emerald-800">{dayPlan.meal.mamaOption}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {dayPlan.meal?.isFish && dayPlan.meal?.fishAlternative && (
-                            <div className="bg-amber-50 border border-amber-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
-                              <UserCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-amber-900 block">Fisch-Alternative (1 Pers.):</span>
-                                <span className="text-amber-800">{dayPlan.meal.fishAlternative}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {dayPlan.meal?.freshTomatoWarning && (
-                            <div className="bg-rose-50 border border-rose-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
-                              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-rose-900 block">Frische Tomaten vermeiden:</span>
-                                <span className="text-rose-800">{dayPlan.meal.tomatoNote}</span>
-                              </div>
-                            </div>
-                          )}
-
-                          {dayPlan.meal?.cheeseNote && (
-                            <div className="bg-sky-50 border border-sky-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
-                              <Check className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
-                              <div>
-                                <span className="font-semibold text-sky-900 block">Käse-Präferenz:</span>
-                                <span className="text-sky-800">{dayPlan.meal.cheeseNote}</span>
-                              </div>
-                            </div>
-                          )}
                         </div>
                       </div>
                     </div>
 
-                    <div className="p-3 bg-slate-50 border-t border-slate-100 text-right">
+                    <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setEditingRecipe(dayPlan.meal)}
+                        className="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1 transition"
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                        <span>Bearbeiten</span>
+                      </button>
                       <button
                         onClick={() => rerollDay(index)}
-                        className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center justify-center space-x-1.5 transition active:scale-98"
+                        className="flex-1 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition active:scale-98"
                       >
-                        <RotateCw className="w-3.5 h-3.5 text-teal-600" />
-                        <span>Gericht neu würfeln</span>
+                        <RotateCw className="w-3.5 h-3.5" />
+                        <span>Neu würfeln</span>
                       </button>
                     </div>
                   </div>
@@ -1173,12 +1182,8 @@ export default function App() {
                   <span>Einkaufsliste für die kommende Woche</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Automatisch berechnet basierend auf allen 7 Mahlzeiten inkl. Fisch-Ausweichzutaten.
+                  Automatisch berechnet basierend auf deinen (ggf. angepassten) Gerichten.
                 </p>
-              </div>
-
-              <div className="text-xs bg-slate-100 px-3 py-2 rounded-xl text-slate-600 border border-slate-200">
-                <span>Häkchen setzen zum Erledigen</span>
               </div>
             </div>
 
@@ -1245,7 +1250,7 @@ export default function App() {
                   <span>Rezept-Datenbank ({recipes.length} Gerichte)</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Enthält alle Gerichte aus deiner Vorlage & gesunde Ergänzungen.
+                  Klicke auf ein Rezept oder den Bearbeiten-Button, um Zutaten (z. B. Kartoffeln $\rightarrow$ Reis) zu ändern.
                 </p>
               </div>
             </div>
@@ -1255,47 +1260,50 @@ export default function App() {
                 const isFav = favorites.includes(recipe.id);
 
                 return (
-                  <div key={recipe.id} className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between">
+                  <div 
+                    key={recipe.id} 
+                    onClick={() => setEditingRecipe(recipe)}
+                    className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-teal-500 cursor-pointer transition group"
+                  >
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <span className="text-[10px] font-bold uppercase tracking-wider text-teal-600 block">
                             {recipe.category}
                           </span>
-                          <h3 className="font-bold text-slate-900 text-base">{recipe.name}</h3>
+                          <h3 className="font-bold text-slate-900 text-base group-hover:text-teal-700 transition">
+                            {recipe.name}
+                          </h3>
                         </div>
                         <button
-                          onClick={() => toggleFavorite(recipe.id)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            toggleFavorite(recipe.id);
+                          }}
                           className="p-1 text-slate-400 hover:text-rose-500 transition"
                         >
                           <Heart className={`w-5 h-5 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
                         </button>
                       </div>
 
-                      <div className="flex items-center gap-2 mt-2 flex-wrap">
-                        {recipe.isMeat && <span className="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fleisch ({recipe.meatType})</span>}
-                        {recipe.isFish && <span className="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fisch</span>}
-                        {!recipe.isMeat && !recipe.isFish && <span className="bg-emerald-100 text-emerald-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Veggie</span>}
-                        {recipe.fromOriginalList && <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Aus Vorlage</span>}
-                      </div>
-
-                      <div className="mt-3 space-y-1 text-xs">
-                        {recipe.freshTomatoWarning && (
-                          <p className="text-rose-700 bg-rose-50 p-1.5 rounded-lg border border-rose-100">
-                            🍅 <strong>Frische Tomaten:</strong> Vermeiden für 1 Pers.
-                          </p>
-                        )}
-                        {recipe.cheeseNote && (
-                          <p className="text-sky-700 bg-sky-50 p-1.5 rounded-lg border border-sky-100">
-                            🧀 <strong>Käse-Präferenz:</strong> {recipe.cheeseNote}
-                          </p>
-                        )}
+                      {/* Ingredients preview */}
+                      <div className="mt-3 pt-2 border-t border-slate-100">
+                        <span className="text-[11px] font-bold text-slate-400 block mb-1">Zutaten:</span>
+                        <div className="flex flex-wrap gap-1 text-xs text-slate-600">
+                          {recipe.ingredients.map((ing, idx) => (
+                            <span key={idx} className="bg-slate-100 px-2 py-0.5 rounded-md">
+                              {ing.name}
+                            </span>
+                          ))}
+                        </div>
                       </div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 text-xs text-slate-500 flex justify-between items-center">
-                      <span>{recipe.prepTime} Min. Zubereitung</span>
-                      <span>{recipe.calories} kcal</span>
+                    <div className="pt-3 border-t border-slate-100 text-xs text-teal-600 font-semibold flex justify-between items-center">
+                      <span className="flex items-center gap-1">
+                        <Edit3 className="w-3.5 h-3.5" /> Rezept & Zutaten anpassen
+                      </span>
+                      <span className="text-slate-400">{recipe.calories} kcal</span>
                     </div>
                   </div>
                 );
@@ -1304,6 +1312,141 @@ export default function App() {
           </div>
         )}
       </main>
+
+      {/* RECEPT EDITING MODAL */}
+      {editingRecipe && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 my-8 space-y-5">
+            <div className="flex items-center justify-between border-b pb-4">
+              <h3 className="text-xl font-bold text-slate-900 flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-teal-600" />
+                Rezept bearbeiten
+              </h3>
+              <button 
+                onClick={() => setEditingRecipe(null)}
+                className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* General Info */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Name des Gerichts:</label>
+                <input
+                  type="text"
+                  value={editingRecipe.name}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, name: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Kategorie:</label>
+                <input
+                  type="text"
+                  value={editingRecipe.category}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, category: e.target.value })}
+                  className="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Zubereitungszeit (Min):</label>
+                <input
+                  type="number"
+                  value={editingRecipe.prepTime}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, prepTime: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Kalorien (kcal):</label>
+                <input
+                  type="number"
+                  value={editingRecipe.calories}
+                  onChange={(e) => setEditingRecipe({ ...editingRecipe, calories: Number(e.target.value) })}
+                  className="w-full px-3 py-2 border rounded-xl text-sm focus:ring-2 focus:ring-teal-500 outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Ingredients Editor List */}
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center justify-between">
+                <h4 className="font-bold text-slate-800 text-sm">Zutatenliste für die Einkaufsliste:</h4>
+                <button
+                  onClick={addIngredientToEditing}
+                  className="text-xs bg-teal-50 text-teal-700 font-bold px-3 py-1.5 rounded-xl border border-teal-200 flex items-center gap-1 hover:bg-teal-100 transition"
+                >
+                  <Plus className="w-3.5 h-3.5" /> Zutat hinzufügen
+                </button>
+              </div>
+
+              <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
+                {editingRecipe.ingredients.map((ing, idx) => (
+                  <div key={idx} className="flex items-center gap-2 bg-slate-50 p-2 rounded-xl border border-slate-200 text-xs">
+                    <input
+                      type="text"
+                      value={ing.name}
+                      placeholder="z. B. Reis statt Kartoffeln"
+                      onChange={(e) => updateEditingIngredient(idx, 'name', e.target.value)}
+                      className="flex-1 px-2 py-1 border rounded-lg bg-white outline-none"
+                    />
+                    <input
+                      type="number"
+                      value={ing.amount}
+                      onChange={(e) => updateEditingIngredient(idx, 'amount', Number(e.target.value))}
+                      className="w-16 px-2 py-1 border rounded-lg bg-white outline-none"
+                    />
+                    <input
+                      type="text"
+                      value={ing.unit}
+                      placeholder="g / Stk."
+                      onChange={(e) => updateEditingIngredient(idx, 'unit', e.target.value)}
+                      className="w-16 px-2 py-1 border rounded-lg bg-white outline-none"
+                    />
+                    <select
+                      value={ing.category}
+                      onChange={(e) => updateEditingIngredient(idx, 'category', e.target.value as any)}
+                      className="px-2 py-1 border rounded-lg bg-white outline-none"
+                    >
+                      <option value="Gemüse">Gemüse</option>
+                      <option value="Fleisch & Fisch">Fleisch & Fisch</option>
+                      <option value="Kühlregal">Kühlregal</option>
+                      <option value="Vorrat">Vorrat</option>
+                    </select>
+                    <button
+                      onClick={() => removeIngredientFromEditing(idx)}
+                      className="p-1 text-slate-400 hover:text-rose-600 transition"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center justify-end gap-3 border-t pt-4">
+              <button
+                onClick={() => setEditingRecipe(null)}
+                className="px-4 py-2 border rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={() => saveRecipeChanges(editingRecipe)}
+                className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-sm transition"
+              >
+                <Save className="w-4 h-4" /> Änderungen speichern
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
