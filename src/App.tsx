@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import { 
-  Calendar, 
-  ShoppingBag, 
-  RotateCw, 
-  Heart, 
-  CheckCircle2, 
-  Circle, 
-  Flame, 
-  Clock, 
-  Check, 
-  Utensils, 
+import {
+  Calendar,
+  ShoppingBag,
+  RotateCw,
+  Heart,
+  CheckCircle2,
+  Circle,
+  Flame,
+  Clock,
+  Check,
+  Utensils,
   ChefHat,
   Filter,
   X,
@@ -26,7 +26,7 @@ const DAYS_OF_WEEK = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('plan');
-  
+
   const [recipes, setRecipes] = useState<Recipe[]>(() => {
     const saved = localStorage.getItem('familien_recipes_v4');
     return saved ? JSON.parse(saved) : INITIAL_RECIPES;
@@ -34,7 +34,7 @@ export default function App() {
 
   const [favorites, setFavorites] = useState<string[]>(['3', '7', '14', '15', '26', '60']);
   const [historyIds] = useState<string[]>(['2', '4', '8', '11', '13', '18', '20']);
-  
+
   const [excludedIngredients, setExcludedIngredients] = useState<string[]>([]);
   const [newIngredientInput, setNewIngredientInput] = useState<string>('');
 
@@ -64,7 +64,7 @@ export default function App() {
       return false;
     }
     if (excludedIngredients.length === 0) return true;
-    return !recipe.ingredients.some(ing => 
+    return !recipe.ingredients.some(ing =>
       excludedIngredients.some(ex => ing.name.toLowerCase().includes(ex))
     );
   };
@@ -72,7 +72,7 @@ export default function App() {
   const getEligibleRecipes = (excludeIds: string[] = [], meatCountCurrent: number = 0, maxMeat: number = 4): Recipe[] => {
     const allBlockedIds = new Set([...historyIds, ...excludeIds]);
     let eligible = recipes.filter(r => !allBlockedIds.has(r.id) && isRecipeAllowed(r));
-    
+
     if (eligible.length < 3) {
       eligible = recipes.filter(r => !excludeIds.includes(r.id) && isRecipeAllowed(r));
     }
@@ -91,7 +91,7 @@ export default function App() {
 
     for (let i = 0; i < 7; i++) {
       let candidatePool = getEligibleRecipes(selectedIds, meatCount, targetMeatDays);
-      
+
       const remainingDays = 7 - i;
       const neededMeat = targetMeatDays - meatCount;
       if (neededMeat > 0 && remainingDays <= neededMeat) {
@@ -107,7 +107,7 @@ export default function App() {
 
       const fallback = recipes.find(r => isRecipeAllowed(r)) || recipes[0];
       const selected = weightedPool[Math.floor(Math.random() * weightedPool.length)] || fallback;
-      
+
       if (selected.isMeat) meatCount++;
 
       plan.push({
@@ -269,7 +269,7 @@ export default function App() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Familien Essensplaner</h1>
               <p className="text-xs text-teal-100 flex items-center gap-2 mt-0.5">
-                <span>2 Erwachsene, 2 Kinder</span> • 
+                <span>2 Erwachsene, 2 Kinder</span> •
                 <span className="text-emerald-200">Mit Airfryer & Rezeptverwaltung</span>
               </p>
             </div>
@@ -278,9 +278,8 @@ export default function App() {
           <nav className="flex items-center bg-black/15 p-1 rounded-xl backdrop-blur-sm self-start md:self-auto">
             <button
               onClick={() => setActiveTab('plan')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'plan' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-              }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'plan' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+                }`}
             >
               <Calendar className="w-4 h-4" />
               <span>Wochenplan</span>
@@ -288,9 +287,8 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('shopping')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'shopping' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-              }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'shopping' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+                }`}
             >
               <ShoppingBag className="w-4 h-4" />
               <span>Einkaufsliste</span>
@@ -298,9 +296,8 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('recipes')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                activeTab === 'recipes' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-              }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'recipes' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+                }`}
             >
               <Utensils className="w-4 h-4" />
               <span>Rezepte ({recipes.length})</span>
@@ -387,7 +384,7 @@ export default function App() {
                 {excludedIngredients.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2.5">
                     {excludedIngredients.map((item) => (
-                      <span 
+                      <span
                         key={item}
                         className="bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium"
                       >
@@ -407,7 +404,7 @@ export default function App() {
                 const isFav = dayPlan.meal && favorites.includes(dayPlan.meal.id);
 
                 return (
-                  <div 
+                  <div
                     key={dayPlan.day}
                     className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between overflow-hidden group"
                   >
@@ -453,7 +450,7 @@ export default function App() {
                         </div>
 
                         {dayPlan.meal?.instructions && (
-                          <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100 line-clamp-2">
+                          <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
                             <span className="font-bold block text-slate-700 mb-0.5 flex items-center gap-1">
                               <BookOpen className="w-3 h-3 text-teal-600" /> Anleitung:
                             </span>
@@ -515,12 +512,11 @@ export default function App() {
                       {items.map((item) => {
                         const isChecked = !!checkedIngredients[item.id];
                         return (
-                          <li 
+                          <li
                             key={item.id}
                             onClick={() => toggleCheckIngredient(item.id)}
-                            className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition select-none ${
-                              isChecked ? 'bg-slate-50 text-slate-400 line-through' : 'hover:bg-slate-50 text-slate-800'
-                            }`}
+                            className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition select-none ${isChecked ? 'bg-slate-50 text-slate-400 line-through' : 'hover:bg-slate-50 text-slate-800'
+                              }`}
                           >
                             <div className="flex items-center space-x-3">
                               {isChecked ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> : <Circle className="w-5 h-5 text-slate-300 shrink-0" />}
@@ -564,8 +560,8 @@ export default function App() {
               {recipes.map(recipe => {
                 const isFav = favorites.includes(recipe.id);
                 return (
-                  <div 
-                    key={recipe.id} 
+                  <div
+                    key={recipe.id}
                     onClick={() => setEditingRecipe(recipe)}
                     className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-teal-500 cursor-pointer transition group"
                   >
