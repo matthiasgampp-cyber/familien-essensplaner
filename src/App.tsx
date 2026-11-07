@@ -14,13 +14,48 @@ import {
   Check, 
   Utensils, 
   ChefHat,
-  ChevronRight,
   Filter
 } from 'lucide-react';
 
-// STAMM-GERICHTE AUS DER VORLAGE UND GESUNDE ERGÄNZUNGEN
-const INITIAL_RECIPES = [
-  // Original Vorlage
+export interface Ingredient {
+  name: string;
+  amount: number;
+  unit: string;
+  category: 'Kühlregal' | 'Gemüse' | 'Vorrat' | 'Fleisch & Fisch';
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  category: string;
+  isMeat: boolean;
+  isFish: boolean;
+  calories: number;
+  prepTime: number;
+  kidsRating: number;
+  mamaOption: string | null;
+  fishAlternative: string | null;
+  freshTomatoWarning: boolean;
+  tomatoNote: string | null;
+  cheeseNote: string | null;
+  ingredients: Ingredient[];
+  fromOriginalList: boolean;
+}
+
+export interface DayPlan {
+  day: string;
+  meal: Recipe;
+}
+
+export interface ShoppingItem {
+  id: string;
+  name: string;
+  amount: number;
+  unit: string;
+  category: string;
+}
+
+const INITIAL_RECIPES: Recipe[] = [
   {
     id: '1',
     name: 'Spätzle mit Rahmsoße',
@@ -608,8 +643,6 @@ const INITIAL_RECIPES = [
     ],
     fromOriginalList: true
   },
-
-  // Ergänzende gesunde Gerichte (Strikte Einhaltung der Regeln: Keine frischen Tomaten, kein roher Käse)
   {
     id: '28',
     name: 'Ofen-Gnocchi mit Kräuter-Cream & Brokkoli',
@@ -659,27 +692,23 @@ const INITIAL_RECIPES = [
 const DAYS_OF_WEEK = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('plan'); // 'plan', 'shopping', 'recipes'
-  const [recipes, setRecipes] = useState(INITIAL_RECIPES);
-  const [favorites, setFavorites] = useState(['3', '7', '14', '15', '26']); // Preset favorite IDs
+  const [activeTab, setActiveTab] = useState<string>('plan');
+  const [recipes] = useState<Recipe[]>(INITIAL_RECIPES);
+  const [favorites, setFavorites] = useState<string[]>(['3', '7', '14', '15', '26']);
+  const [historyIds] = useState<string[]>(['2', '4', '8', '11', '13', '18', '20']);
   
-  // History tracking for 14-day rule (simulated history + current plan)
-  const [historyIds, setHistoryIds] = useState(['2', '4', '8', '11', '13', '18', '20']);
-  const [currentWeekPlan, setCurrentWeekPlan] = useState([]);
-  const [checkedIngredients, setCheckedIngredients] = useState({});
+  // FIX: Explicitly typed state to prevent TypeScript build errors
+  const [currentWeekPlan, setCurrentWeekPlan] = useState<DayPlan[]>([]);
+  const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
 
-  // Helper: Get available recipes filtering 14-day history
-  const getEligibleRecipes = (excludeIds = [], meatCountCurrent = 0, maxMeat = 4) => {
+  const getEligibleRecipes = (excludeIds: string[] = [], meatCountCurrent: number = 0, maxMeat: number = 4): Recipe[] => {
     const allBlockedIds = new Set([...historyIds, ...excludeIds]);
-    
     let eligible = recipes.filter(r => !allBlockedIds.has(r.id));
     
-    // If pool gets exhausted due to strict history, fallback to allow non-current week items
     if (eligible.length < 3) {
       eligible = recipes.filter(r => !excludeIds.includes(r.id));
     }
 
-    // Filter by meat rule if quota reached
     if (meatCountCurrent >= maxMeat) {
       eligible = eligible.filter(r => !r.isMeat);
     }
@@ -687,19 +716,15 @@ export default function App() {
     return eligible;
   };
 
-  // Generate 7-day meal plan ensuring 3-4 meat days and 14-day no-repeat constraint
   const generateWeeklyPlan = () => {
-    let plan = [];
-    let selectedIds = [];
+    let plan: DayPlan[] = [];
+    let selectedIds: string[] = [];
     let meatCount = 0;
-
-    // Target 3 or 4 meat days
     const targetMeatDays = Math.random() > 0.5 ? 3 : 4;
 
     for (let i = 0; i < 7; i++) {
       let candidatePool = getEligibleRecipes(selectedIds, meatCount, targetMeatDays);
       
-      // If we still need meat days towards the end of the week, force meat dishes
       const remainingDays = 7 - i;
       const neededMeat = targetMeatDays - meatCount;
       if (neededMeat > 0 && remainingDays <= neededMeat) {
@@ -707,8 +732,7 @@ export default function App() {
         if (meatPool.length > 0) candidatePool = meatPool;
       }
 
-      // Favor favorite dishes with 2x probability weight
-      let weightedPool = [];
+      let weightedPool: Recipe[] = [];
       candidatePool.forEach(r => {
         weightedPool.push(r);
         if (favorites.includes(r.id)) {
@@ -732,8 +756,7 @@ export default function App() {
     setCurrentWeekPlan(plan);
   };
 
-  // Re-roll a single day with auto recalculated meat ratio and immediate shopping list update
-  const rerollDay = (dayIndex) => {
+  const rerollDay = (dayIndex: number) => {
     const currentMeatCount = currentWeekPlan.reduce((acc, curr, idx) => {
       if (idx === dayIndex) return acc;
       return acc + (curr.meal.isMeat ? 1 : 0);
@@ -743,10 +766,9 @@ export default function App() {
       .filter((_, idx) => idx !== dayIndex)
       .map(p => p.meal.id);
 
-    // Max 4 meat dishes allowed per week
     const candidatePool = getEligibleRecipes(otherSelectedIds, currentMeatCount, 4);
 
-    let weightedPool = [];
+    let weightedPool: Recipe[] = [];
     candidatePool.forEach(r => {
       weightedPool.push(r);
       if (favorites.includes(r.id)) weightedPool.push(r);
@@ -763,33 +785,29 @@ export default function App() {
     setCurrentWeekPlan(updatedPlan);
   };
 
-  // Auto-generate on initial render
   useEffect(() => {
     generateWeeklyPlan();
   }, []);
 
-  // Toggle Favorite
-  const toggleFavorite = (id) => {
+  const toggleFavorite = (id: string) => {
     setFavorites(prev => 
       prev.includes(id) ? prev.filter(fId => fId !== id) : [...prev, id]
     );
   };
 
-  // Calculate current week statistics
   const weekStats = useMemo(() => {
     const meatDays = currentWeekPlan.filter(p => p.meal?.isMeat).length;
     const fishDays = currentWeekPlan.filter(p => p.meal?.isFish).length;
     const vegDays = 7 - meatDays - fishDays;
-    const avgCalories = Math.round(
+    const avgCalories = currentWeekPlan.length > 0 ? Math.round(
       currentWeekPlan.reduce((acc, p) => acc + (p.meal?.calories || 0), 0) / 7
-    );
+    ) : 0;
 
     return { meatDays, fishDays, vegDays, avgCalories };
   }, [currentWeekPlan]);
 
-  // Consolidate Shopping List Items grouped by Supermarket Categories
   const shoppingList = useMemo(() => {
-    const categories = {
+    const categories: Record<string, ShoppingItem[]> = {
       'Gemüse': [],
       'Fleisch & Fisch': [],
       'Kühlregal': [],
@@ -799,18 +817,18 @@ export default function App() {
     currentWeekPlan.forEach(dayPlan => {
       if (!dayPlan.meal) return;
       dayPlan.meal.ingredients.forEach(ing => {
-        const cat = categories[ing.category] ? ing.category : 'Vorrat';
-        const existingIndex = categories[cat].findIndex(item => item.name.toLowerCase() === ing.name.toLowerCase());
+        const catKey = categories[ing.category] ? ing.category : 'Vorrat';
+        const existingIndex = categories[catKey].findIndex(item => item.name.toLowerCase() === ing.name.toLowerCase());
 
         if (existingIndex > -1) {
-          categories[cat][existingIndex].amount += ing.amount;
+          categories[catKey][existingIndex].amount += ing.amount;
         } else {
-          categories[cat].push({
+          categories[catKey].push({
             id: `${ing.name}-${ing.category}`,
             name: ing.name,
             amount: ing.amount,
             unit: ing.unit,
-            category: cat
+            category: catKey
           });
         }
       });
@@ -819,7 +837,7 @@ export default function App() {
     return categories;
   }, [currentWeekPlan]);
 
-  const toggleCheckIngredient = (id) => {
+  const toggleCheckIngredient = (id: string) => {
     setCheckedIngredients(prev => ({
       ...prev,
       [id]: !prev[id]
@@ -828,7 +846,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-800 font-sans pb-12">
-      {/* HEADER SECTION */}
       <header className="bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-700 text-white shadow-lg sticky top-0 z-30">
         <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center space-x-3">
@@ -844,7 +861,6 @@ export default function App() {
             </div>
           </div>
 
-          {/* Navigation Bar */}
           <nav className="flex items-center bg-black/15 p-1 rounded-xl backdrop-blur-sm self-start md:self-auto">
             <button
               onClick={() => setActiveTab('plan')}
@@ -879,14 +895,9 @@ export default function App() {
         </div>
       </header>
 
-      {/* MAIN CONTAINER */}
       <main className="max-w-6xl mx-auto px-4 pt-6">
-
-        {/* TAB 1: WOCHENPLAN */}
         {activeTab === 'plan' && (
           <div className="space-y-6">
-            
-            {/* STATS & CONTROL BAR */}
             <div className="bg-white rounded-2xl p-5 shadow-sm border border-slate-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5">
@@ -922,7 +933,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* RESTRICTION HIGHLIGHT BADGES */}
             <div className="bg-gradient-to-r from-amber-500/10 via-orange-500/10 to-rose-500/10 border border-amber-200/80 rounded-xl p-3.5 text-xs text-slate-700 flex flex-wrap gap-x-6 gap-y-2 items-center">
               <span className="font-semibold text-slate-900 flex items-center gap-1">
                 <Filter className="w-3.5 h-3.5 text-amber-600" />
@@ -942,7 +952,6 @@ export default function App() {
               </span>
             </div>
 
-            {/* 7-DAY MEAL CARDS GRID */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {currentWeekPlan.map((dayPlan, index) => {
                 const isFav = dayPlan.meal && favorites.includes(dayPlan.meal.id);
@@ -952,7 +961,6 @@ export default function App() {
                     key={dayPlan.day}
                     className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between overflow-hidden group"
                   >
-                    {/* Card Header */}
                     <div>
                       <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200/60 flex items-center justify-between">
                         <span className="font-bold text-slate-900">{dayPlan.day}</span>
@@ -975,7 +983,6 @@ export default function App() {
                         </div>
                       </div>
 
-                      {/* Meal Body */}
                       <div className="p-4 space-y-3">
                         <div className="flex items-start justify-between gap-2">
                           <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-teal-700 transition">
@@ -990,7 +997,6 @@ export default function App() {
                           </button>
                         </div>
 
-                        {/* Meta Info */}
                         <div className="flex items-center gap-3 text-xs text-slate-500">
                           <span className="flex items-center gap-1">
                             <Clock className="w-3.5 h-3.5 text-slate-400" />
@@ -1005,9 +1011,7 @@ export default function App() {
                           </span>
                         </div>
 
-                        {/* Special Custom Options / Alerts */}
                         <div className="space-y-2 pt-1">
-                          {/* Mama Option */}
                           {dayPlan.meal?.mamaOption && (
                             <div className="bg-emerald-50 border border-emerald-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
                               <Sparkles className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
@@ -1018,7 +1022,6 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Fish Alternative */}
                           {dayPlan.meal?.isFish && dayPlan.meal?.fishAlternative && (
                             <div className="bg-amber-50 border border-amber-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
                               <UserCheck className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
@@ -1029,7 +1032,6 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Fresh Tomato Rule Note */}
                           {dayPlan.meal?.freshTomatoWarning && (
                             <div className="bg-rose-50 border border-rose-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
                               <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
@@ -1040,7 +1042,6 @@ export default function App() {
                             </div>
                           )}
 
-                          {/* Cheese Note */}
                           {dayPlan.meal?.cheeseNote && (
                             <div className="bg-sky-50 border border-sky-200/70 p-2 rounded-xl flex items-start space-x-2 text-xs">
                               <Check className="w-4 h-4 text-sky-600 shrink-0 mt-0.5" />
@@ -1054,11 +1055,10 @@ export default function App() {
                       </div>
                     </div>
 
-                    {/* Card Footer: Re-roll button */}
                     <div className="p-3 bg-slate-50 border-t border-slate-100 text-right">
                       <button
                         onClick={() => rerollDay(index)}
-                        className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center justify-center space-x-1.5 transition active:scale-98 shadow-2xs"
+                        className="w-full py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center justify-center space-x-1.5 transition active:scale-98"
                       >
                         <RotateCw className="w-3.5 h-3.5 text-teal-600" />
                         <span>Gericht neu würfeln</span>
@@ -1071,7 +1071,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 2: EINKAUFSLISTE */}
         {activeTab === 'shopping' && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -1090,7 +1089,6 @@ export default function App() {
               </div>
             </div>
 
-            {/* Shopping Categories */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {Object.entries(shoppingList).map(([category, items]) => (
                 <div key={category} className="bg-white rounded-2xl p-5 border border-slate-200/80 shadow-sm space-y-4">
@@ -1145,7 +1143,6 @@ export default function App() {
           </div>
         )}
 
-        {/* TAB 3: REZEPTE & FAVORITEN POOL */}
         {activeTab === 'recipes' && (
           <div className="space-y-6">
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -1155,12 +1152,11 @@ export default function App() {
                   <span>Rezept-Datenbank ({recipes.length} Gerichte)</span>
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Enthält alle 27 Gerichte aus deiner docx-Vorlage & gesunde Ergänzungen.
+                  Enthält alle Gerichte aus deiner Vorlage & gesunde Ergänzungen.
                 </p>
               </div>
             </div>
 
-            {/* RECIPE GRID */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
               {recipes.map(recipe => {
                 const isFav = favorites.includes(recipe.id);
@@ -1183,7 +1179,6 @@ export default function App() {
                         </button>
                       </div>
 
-                      {/* Info Badges */}
                       <div className="flex items-center gap-2 mt-2 flex-wrap">
                         {recipe.isMeat && <span className="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fleisch</span>}
                         {recipe.isFish && <span className="bg-sky-100 text-sky-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Fisch</span>}
@@ -1191,7 +1186,6 @@ export default function App() {
                         {recipe.fromOriginalList && <span className="bg-amber-100 text-amber-800 text-[10px] px-2 py-0.5 rounded-md font-semibold">Aus Vorlage</span>}
                       </div>
 
-                      {/* Rule Badges */}
                       <div className="mt-3 space-y-1 text-xs">
                         {recipe.freshTomatoWarning && (
                           <p className="text-rose-700 bg-rose-50 p-1.5 rounded-lg border border-rose-100">
@@ -1216,7 +1210,6 @@ export default function App() {
             </div>
           </div>
         )}
-
       </main>
     </div>
   );
