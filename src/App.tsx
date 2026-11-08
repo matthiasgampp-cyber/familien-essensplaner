@@ -1,15 +1,15 @@
 import { useState, useEffect, useMemo } from 'react';
-import {
-  Calendar,
-  ShoppingBag,
-  RotateCw,
-  Heart,
-  CheckCircle2,
-  Circle,
-  Flame,
-  Clock,
-  Check,
-  Utensils,
+import { 
+  Calendar, 
+  ShoppingBag, 
+  RotateCw, 
+  Heart, 
+  CheckCircle2, 
+  Circle, 
+  Flame, 
+  Clock, 
+  Check, 
+  Utensils, 
   ChefHat,
   Filter,
   X,
@@ -18,7 +18,8 @@ import {
   Trash2,
   Save,
   BookOpen,
-  Zap
+  Zap,
+  Coffee
 } from 'lucide-react';
 import { INITIAL_RECIPES, Recipe, Ingredient, DayPlan, ShoppingItem } from './recipes';
 
@@ -26,7 +27,7 @@ const DAYS_OF_WEEK = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag',
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<string>('plan');
-
+  
   const [recipes, setRecipes] = useState<Recipe[]>(() => {
     const saved = localStorage.getItem('familien_recipes_v4');
     return saved ? JSON.parse(saved) : INITIAL_RECIPES;
@@ -34,7 +35,7 @@ export default function App() {
 
   const [favorites, setFavorites] = useState<string[]>(['3', '7', '14', '15', '26', '60']);
   const [historyIds] = useState<string[]>(['2', '4', '8', '11', '13', '18', '20']);
-
+  
   const [excludedIngredients, setExcludedIngredients] = useState<string[]>([]);
   const [newIngredientInput, setNewIngredientInput] = useState<string>('');
 
@@ -42,6 +43,7 @@ export default function App() {
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
 
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
+  const [assigningRecipe, setAssigningRecipe] = useState<Recipe | null>(null); // Für Modal: Rezept einem Tag zuweisen
 
   useEffect(() => {
     localStorage.setItem('familien_recipes_v4', JSON.stringify(recipes));
@@ -64,7 +66,7 @@ export default function App() {
       return false;
     }
     if (excludedIngredients.length === 0) return true;
-    return !recipe.ingredients.some(ing =>
+    return !recipe.ingredients.some(ing => 
       excludedIngredients.some(ex => ing.name.toLowerCase().includes(ex))
     );
   };
@@ -72,7 +74,7 @@ export default function App() {
   const getEligibleRecipes = (excludeIds: string[] = [], meatCountCurrent: number = 0, maxMeat: number = 4): Recipe[] => {
     const allBlockedIds = new Set([...historyIds, ...excludeIds]);
     let eligible = recipes.filter(r => !allBlockedIds.has(r.id) && isRecipeAllowed(r));
-
+    
     if (eligible.length < 3) {
       eligible = recipes.filter(r => !excludeIds.includes(r.id) && isRecipeAllowed(r));
     }
@@ -91,7 +93,7 @@ export default function App() {
 
     for (let i = 0; i < 7; i++) {
       let candidatePool = getEligibleRecipes(selectedIds, meatCount, targetMeatDays);
-
+      
       const remainingDays = 7 - i;
       const neededMeat = targetMeatDays - meatCount;
       if (neededMeat > 0 && remainingDays <= neededMeat) {
@@ -107,7 +109,7 @@ export default function App() {
 
       const fallback = recipes.find(r => isRecipeAllowed(r)) || recipes[0];
       const selected = weightedPool[Math.floor(Math.random() * weightedPool.length)] || fallback;
-
+      
       if (selected.isMeat) meatCount++;
 
       plan.push({
@@ -122,10 +124,10 @@ export default function App() {
   const rerollDay = (dayIndex: number) => {
     const currentMeatCount = currentWeekPlan.reduce((acc, curr, idx) => {
       if (idx === dayIndex) return acc;
-      return acc + (curr.meal.isMeat ? 1 : 0);
+      return acc + (curr.meal?.isMeat ? 1 : 0);
     }, 0);
 
-    const otherSelectedIds = currentWeekPlan.filter((_, idx) => idx !== dayIndex).map(p => p.meal.id);
+    const otherSelectedIds = currentWeekPlan.filter((_, idx) => idx !== dayIndex).map(p => p.meal?.id).filter(Boolean) as string[];
     const candidatePool = getEligibleRecipes(otherSelectedIds, currentMeatCount, 4);
 
     let weightedPool: Recipe[] = [];
@@ -142,6 +144,31 @@ export default function App() {
     setCurrentWeekPlan(updatedPlan);
   };
 
+  // Tag komplett freigeben / abwählen (Kein Kochen)
+  const clearDayMeal = (dayIndex: number) => {
+    const updatedPlan = [...currentWeekPlan];
+    updatedPlan[dayIndex] = {
+      ...updatedPlan[dayIndex],
+      meal: null as any
+    };
+    setCurrentWeekPlan(updatedPlan);
+  };
+
+  // Bestimmtes Rezept direkt für einen Tag setzen
+  const assignRecipeToDay = (dayName: string) => {
+    if (!assigningRecipe) return;
+    const index = currentWeekPlan.findIndex(p => p.day === dayName);
+    if (index > -1) {
+      const updatedPlan = [...currentWeekPlan];
+      updatedPlan[index] = {
+        ...updatedPlan[index],
+        meal: assigningRecipe
+      };
+      setCurrentWeekPlan(updatedPlan);
+    }
+    setAssigningRecipe(null);
+  };
+
   useEffect(() => {
     generateWeeklyPlan();
   }, [excludedIngredients]);
@@ -153,11 +180,12 @@ export default function App() {
   const weekStats = useMemo(() => {
     const meatDays = currentWeekPlan.filter(p => p.meal?.isMeat).length;
     const fishDays = currentWeekPlan.filter(p => p.meal?.isFish).length;
-    const vegDays = 7 - meatDays - fishDays;
-    const avgCalories = currentWeekPlan.length > 0 ? Math.round(
-      currentWeekPlan.reduce((acc, p) => acc + (p.meal?.calories || 0), 0) / 7
+    const activeDaysCount = currentWeekPlan.filter(p => p.meal !== null).length;
+    const vegDays = activeDaysCount - meatDays - fishDays;
+    const avgCalories = activeDaysCount > 0 ? Math.round(
+      currentWeekPlan.reduce((acc, p) => acc + (p.meal?.calories || 0), 0) / activeDaysCount
     ) : 0;
-    return { meatDays, fishDays, vegDays, avgCalories };
+    return { meatDays, fishDays, vegDays: Math.max(0, vegDays), avgCalories };
   }, [currentWeekPlan]);
 
   const shoppingList = useMemo(() => {
@@ -169,7 +197,7 @@ export default function App() {
     };
 
     currentWeekPlan.forEach(dayPlan => {
-      if (!dayPlan.meal) return;
+      if (!dayPlan.meal || !dayPlan.meal.ingredients) return;
       dayPlan.meal.ingredients.forEach(ing => {
         const catKey = categories[ing.category] ? ing.category : 'Vorrat';
         const existingIndex = categories[catKey].findIndex(item => item.name.toLowerCase() === ing.name.toLowerCase());
@@ -198,7 +226,7 @@ export default function App() {
     const exists = recipes.some(r => r.id === updatedRecipe.id);
     if (exists) {
       setRecipes(prev => prev.map(r => r.id === updatedRecipe.id ? updatedRecipe : r));
-      setCurrentWeekPlan(prev => prev.map(dp => dp.meal.id === updatedRecipe.id ? { ...dp, meal: updatedRecipe } : dp));
+      setCurrentWeekPlan(prev => prev.map(dp => dp.meal?.id === updatedRecipe.id ? { ...dp, meal: updatedRecipe } : dp));
     } else {
       setRecipes(prev => [updatedRecipe, ...prev]);
     }
@@ -269,7 +297,7 @@ export default function App() {
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Familien Essensplaner</h1>
               <p className="text-xs text-teal-100 flex items-center gap-2 mt-0.5">
-                <span>2 Erwachsene, 2 Kinder</span> •
+                <span>2 Erwachsene, 2 Kinder</span> • 
                 <span className="text-emerald-200">Mit Airfryer & Rezeptverwaltung</span>
               </p>
             </div>
@@ -278,8 +306,9 @@ export default function App() {
           <nav className="flex items-center bg-black/15 p-1 rounded-xl backdrop-blur-sm self-start md:self-auto">
             <button
               onClick={() => setActiveTab('plan')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'plan' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-                }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'plan' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+              }`}
             >
               <Calendar className="w-4 h-4" />
               <span>Wochenplan</span>
@@ -287,8 +316,9 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('shopping')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'shopping' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-                }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'shopping' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+              }`}
             >
               <ShoppingBag className="w-4 h-4" />
               <span>Einkaufsliste</span>
@@ -296,8 +326,9 @@ export default function App() {
 
             <button
               onClick={() => setActiveTab('recipes')}
-              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${activeTab === 'recipes' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
-                }`}
+              className={`flex items-center space-x-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                activeTab === 'recipes' ? 'bg-white text-teal-800 shadow-md' : 'text-teal-100 hover:text-white'
+              }`}
             >
               <Utensils className="w-4 h-4" />
               <span>Rezepte ({recipes.length})</span>
@@ -313,17 +344,17 @@ export default function App() {
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-2.5">
                   <span className="text-xs text-emerald-700 font-medium block">Fleischtage</span>
-                  <span className="text-xl font-bold text-emerald-900">{weekStats.meatDays} / 7</span>
+                  <span className="text-xl font-bold text-emerald-900">{weekStats.meatDays}</span>
                   <span className="text-[10px] text-emerald-600 block">(Ziel: 3-4x)</span>
                 </div>
                 <div className="bg-blue-50 border border-blue-100 rounded-xl p-2.5">
                   <span className="text-xs text-blue-700 font-medium block">Fischtage</span>
-                  <span className="text-xl font-bold text-blue-900">{weekStats.fishDays} / 7</span>
+                  <span className="text-xl font-bold text-blue-900">{weekStats.fishDays}</span>
                   <span className="text-[10px] text-blue-600 block">(mit Alternative)</span>
                 </div>
                 <div className="bg-teal-50 border border-teal-100 rounded-xl p-2.5">
                   <span className="text-xs text-teal-700 font-medium block">Veggie-Tage</span>
-                  <span className="text-xl font-bold text-teal-900">{weekStats.vegDays} / 7</span>
+                  <span className="text-xl font-bold text-teal-900">{weekStats.vegDays}</span>
                   <span className="text-[10px] text-teal-600 block">(Gesund)</span>
                 </div>
                 <div className="bg-amber-50 border border-amber-100 rounded-xl p-2.5">
@@ -356,7 +387,7 @@ export default function App() {
                 </span>
                 <span className="flex items-center gap-1.5 bg-white/80 px-2.5 py-1 rounded-md border border-slate-200">
                   <Check className="w-3.5 h-3.5 text-emerald-600" />
-                  Airfryer-Gerichte integriert
+                  Tage können flexibel freigestellt werden
                 </span>
               </div>
 
@@ -384,7 +415,7 @@ export default function App() {
                 {excludedIngredients.length > 0 && (
                   <div className="flex flex-wrap gap-2 mt-2.5">
                     {excludedIngredients.map((item) => (
-                      <span
+                      <span 
                         key={item}
                         className="bg-rose-50 text-rose-700 border border-rose-200 text-xs px-2.5 py-1 rounded-lg flex items-center gap-1.5 font-medium"
                       >
@@ -402,9 +433,10 @@ export default function App() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {currentWeekPlan.map((dayPlan, index) => {
                 const isFav = dayPlan.meal && favorites.includes(dayPlan.meal.id);
+                const hasMeal = dayPlan.meal !== null;
 
                 return (
-                  <div
+                  <div 
                     key={dayPlan.day}
                     className="bg-white rounded-2xl border border-slate-200/80 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between overflow-hidden group"
                   >
@@ -412,69 +444,101 @@ export default function App() {
                       <div className="bg-slate-100/80 px-4 py-3 border-b border-slate-200/60 flex items-center justify-between">
                         <span className="font-bold text-slate-900">{dayPlan.day}</span>
                         <div className="flex items-center space-x-1">
-                          {dayPlan.meal?.isAirfryer && (
+                          {hasMeal && dayPlan.meal?.isAirfryer && (
                             <span className="bg-amber-100 text-amber-800 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
                               <Zap className="w-3 h-3 text-amber-600" /> Airfryer
                             </span>
                           )}
-                          {dayPlan.meal?.isMeat && (
+                          {hasMeal && dayPlan.meal?.isMeat && (
                             <span className="bg-rose-100 text-rose-800 text-[11px] font-semibold px-2 py-0.5 rounded-full">
                               {dayPlan.meal.meatType}
+                            </span>
+                          )}
+                          {!hasMeal && (
+                            <span className="bg-slate-200 text-slate-700 text-[11px] font-semibold px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Coffee className="w-3 h-3" /> Frei
                             </span>
                           )}
                         </div>
                       </div>
 
-                      <div className="p-4 space-y-3">
-                        <div className="flex items-start justify-between gap-2">
-                          <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-teal-700 transition">
-                            {dayPlan.meal?.name}
-                          </h3>
-                          <button
-                            onClick={() => toggleFavorite(dayPlan.meal.id)}
-                            className="p-1 text-slate-400 hover:text-rose-500 transition shrink-0"
-                          >
-                            <Heart className={`w-5 h-5 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
-                          </button>
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-slate-500">
-                          <span className="flex items-center gap-1">
-                            <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            {dayPlan.meal?.prepTime} Min.
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <Flame className="w-3.5 h-3.5 text-amber-500" />
-                            {dayPlan.meal?.calories} kcal
-                          </span>
-                        </div>
-
-                        {dayPlan.meal?.instructions && (
-                          <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
-                            <span className="font-bold block text-slate-700 mb-0.5 flex items-center gap-1">
-                              <BookOpen className="w-3 h-3 text-teal-600" /> Anleitung:
-                            </span>
-                            {dayPlan.meal.instructions}
+                      {hasMeal ? (
+                        <div className="p-4 space-y-3">
+                          <div className="flex items-start justify-between gap-2">
+                            <h3 className="font-bold text-slate-900 text-base leading-snug group-hover:text-teal-700 transition">
+                              {dayPlan.meal?.name}
+                            </h3>
+                            <button
+                              onClick={() => toggleFavorite(dayPlan.meal.id)}
+                              className="p-1 text-slate-400 hover:text-rose-500 transition shrink-0"
+                            >
+                              <Heart className={`w-5 h-5 ${isFav ? 'fill-rose-500 text-rose-500' : ''}`} />
+                            </button>
                           </div>
-                        )}
-                      </div>
+
+                          <div className="flex items-center gap-3 text-xs text-slate-500">
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3.5 h-3.5 text-slate-400" />
+                              {dayPlan.meal?.prepTime} Min.
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Flame className="w-3.5 h-3.5 text-amber-500" />
+                              {dayPlan.meal?.calories} kcal
+                            </span>
+                          </div>
+
+                          {dayPlan.meal?.instructions && (
+                            <div className="text-xs text-slate-600 bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                              <span className="font-bold block text-slate-700 mb-0.5 flex items-center gap-1">
+                                <BookOpen className="w-3 h-3 text-teal-600" /> Anleitung:
+                              </span>
+                              {dayPlan.meal.instructions}
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="p-6 text-center space-y-2">
+                          <Coffee className="w-8 h-8 text-slate-300 mx-auto" />
+                          <p className="text-xs font-semibold text-slate-500">An diesem Tag wird nicht gekocht / frei.</p>
+                          <p className="text-[11px] text-slate-400">Fließt nicht in die Einkaufsliste ein.</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="p-3 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2">
-                      <button
-                        onClick={() => setEditingRecipe(dayPlan.meal)}
-                        className="py-2 px-3 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1 transition"
-                      >
-                        <Edit3 className="w-3.5 h-3.5 text-slate-500" />
-                        <span>Bearbeiten</span>
-                      </button>
-                      <button
-                        onClick={() => rerollDay(index)}
-                        className="flex-1 py-2 px-3 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition active:scale-98"
-                      >
-                        <RotateCw className="w-3.5 h-3.5" />
-                        <span>Neu würfeln</span>
-                      </button>
+                      {hasMeal ? (
+                        <>
+                          <button
+                            onClick={() => setEditingRecipe(dayPlan.meal)}
+                            className="py-2 px-2.5 bg-white hover:bg-slate-100 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 flex items-center gap-1 transition"
+                          >
+                            <Edit3 className="w-3.5 h-3.5 text-slate-500" />
+                            <span>Bearbeiten</span>
+                          </button>
+                          <button
+                            onClick={() => clearDayMeal(index)}
+                            className="py-2 px-2.5 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-semibold text-rose-700 transition"
+                            title="Tag freigeben (nicht kochen)"
+                          >
+                            Frei
+                          </button>
+                          <button
+                            onClick={() => rerollDay(index)}
+                            className="flex-1 py-2 px-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-1 transition"
+                          >
+                            <RotateCw className="w-3.5 h-3.5" />
+                            <span>Neu</span>
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          onClick={() => rerollDay(index)}
+                          className="w-full py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-semibold flex items-center justify-center space-x-1.5 transition"
+                        >
+                          <RotateCw className="w-3.5 h-3.5" />
+                          <span>Rezept zuweisen</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 );
@@ -490,6 +554,7 @@ export default function App() {
                 <ShoppingBag className="w-6 h-6 text-teal-600" />
                 <span>Einkaufsliste für die kommende Woche</span>
               </h2>
+              <p className="text-xs text-slate-500 mt-1">Berücksichtigt nur aktive Kochtage (freigestellte Tage sind ausgenommen).</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -512,11 +577,12 @@ export default function App() {
                       {items.map((item) => {
                         const isChecked = !!checkedIngredients[item.id];
                         return (
-                          <li
+                          <li 
                             key={item.id}
                             onClick={() => toggleCheckIngredient(item.id)}
-                            className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition select-none ${isChecked ? 'bg-slate-50 text-slate-400 line-through' : 'hover:bg-slate-50 text-slate-800'
-                              }`}
+                            className={`flex items-center justify-between p-2.5 rounded-xl cursor-pointer transition select-none ${
+                              isChecked ? 'bg-slate-50 text-slate-400 line-through' : 'hover:bg-slate-50 text-slate-800'
+                            }`}
                           >
                             <div className="flex items-center space-x-3">
                               {isChecked ? <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" /> : <Circle className="w-5 h-5 text-slate-300 shrink-0" />}
@@ -544,7 +610,7 @@ export default function App() {
                   <Utensils className="w-6 h-6 text-teal-600" />
                   <span>Rezept-Datenbank ({recipes.length} Gerichte)</span>
                 </h2>
-                <p className="text-xs text-slate-500 mt-1">Inklusive Airfryer-Spezialitäten und individueller Anpassung.</p>
+                <p className="text-xs text-slate-500 mt-1">Plane Lieblingsrezepte direkt für einen bestimmten Wochentag ein.</p>
               </div>
 
               <button
@@ -560,12 +626,11 @@ export default function App() {
               {recipes.map(recipe => {
                 const isFav = favorites.includes(recipe.id);
                 return (
-                  <div
-                    key={recipe.id}
-                    onClick={() => setEditingRecipe(recipe)}
-                    className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-teal-500 cursor-pointer transition group"
+                  <div 
+                    key={recipe.id} 
+                    className="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-sm space-y-3 flex flex-col justify-between hover:border-teal-500 transition group"
                   >
-                    <div>
+                    <div onClick={() => setEditingRecipe(recipe)} className="cursor-pointer">
                       <div className="flex items-start justify-between gap-2">
                         <div>
                           <div className="flex items-center gap-2">
@@ -589,9 +654,20 @@ export default function App() {
                       <div className="mt-2 text-xs text-slate-600 line-clamp-2">{recipe.instructions}</div>
                     </div>
 
-                    <div className="pt-3 border-t border-slate-100 text-xs text-teal-600 font-semibold flex justify-between items-center">
-                      <span className="flex items-center gap-1"><Edit3 className="w-3.5 h-3.5" /> Bearbeiten</span>
-                      <span className="text-slate-400">{recipe.calories} kcal</span>
+                    <div className="pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                      <button
+                        onClick={() => setAssigningRecipe(recipe)}
+                        className="flex-1 py-2 px-3 bg-teal-50 hover:bg-teal-100 text-teal-700 border border-teal-200 rounded-xl text-xs font-semibold flex items-center justify-center gap-1 transition"
+                      >
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>Für Wochentag wählen</span>
+                      </button>
+                      <button
+                        onClick={() => setEditingRecipe(recipe)}
+                        className="py-2 px-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-semibold flex items-center gap-1 transition"
+                      >
+                        <Edit3 className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </div>
                 );
@@ -601,7 +677,40 @@ export default function App() {
         )}
       </main>
 
-      {/* MODAL */}
+      {/* MODAL: REZEPT EINPLANEN */}
+      {assigningRecipe && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3">
+              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                <Calendar className="w-5 h-5 text-teal-600" /> Wochentag wählen
+              </h3>
+              <button onClick={() => setAssigningRecipe(null)} className="p-1 rounded-lg text-slate-400 hover:bg-slate-100 transition">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              Für welchen Tag möchtest du <strong className="text-slate-900">{assigningRecipe.name}</strong> einplanen?
+            </p>
+
+            <div className="space-y-2">
+              {DAYS_OF_WEEK.map(day => (
+                <button
+                  key={day}
+                  onClick={() => assignRecipeToDay(day)}
+                  className="w-full py-2.5 px-4 bg-slate-50 hover:bg-teal-50 hover:text-teal-700 hover:border-teal-300 border border-slate-200 rounded-xl text-xs font-bold text-slate-700 flex items-center justify-between transition"
+                >
+                  <span>{day}</span>
+                  <span className="text-[10px] text-slate-400 font-normal">Zuweisen</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: REZEPT BEARBEITEN */}
       {editingRecipe && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 my-8 space-y-5 max-h-[90vh] overflow-y-auto">
