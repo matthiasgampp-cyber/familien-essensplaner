@@ -39,7 +39,17 @@ export default function App() {
   const [excludedIngredients, setExcludedIngredients] = useState<string[]>([]);
   const [newIngredientInput, setNewIngredientInput] = useState<string>('');
 
-  const [currentWeekPlan, setCurrentWeekPlan] = useState<DayPlan[]>([]);
+  const [currentWeekPlan, setCurrentWeekPlan] = useState<DayPlan[]>(() => {
+    const savedPlan = localStorage.getItem('familien_week_plan_v1');
+    return savedPlan ? JSON.parse(savedPlan) : [];
+  });
+
+  // Speichert den Wochenplan automatisch bei jeder Änderung ab
+  useEffect(() => {
+    if (currentWeekPlan.length > 0) {
+      localStorage.setItem('familien_week_plan_v1', JSON.stringify(currentWeekPlan));
+    }
+  }, [currentWeekPlan]);
   const [checkedIngredients, setCheckedIngredients] = useState<Record<string, boolean>>({});
 
   const [editingRecipe, setEditingRecipe] = useState<Recipe | null>(null);
