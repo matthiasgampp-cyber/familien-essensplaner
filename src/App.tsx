@@ -180,7 +180,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    generateWeeklyPlan();
+    const savedPlan = localStorage.getItem('familien_week_plan_v1');
+    if (!savedPlan || JSON.parse(savedPlan).length === 0) {
+      generateWeeklyPlan();
+    }
   }, [excludedIngredients]);
 
   const toggleFavorite = (id: string) => {
